@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.1",
+    "firebase": "^10.12.1"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.38",
+    "autoprefixer": "^10.4.19",
+    "vite": "^5.2.8"
+  }
+}
+ 
+****thats what promofly is using 
+ for now any updates or new dependencies 
+ will be added here *****
