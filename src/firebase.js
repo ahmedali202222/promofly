@@ -1,9 +1,8 @@
-// src/firebase.js
-// src/firebase.js
+// ✅ FIXED - src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // 🔐 add this line
-
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAnDkKDKwjg1Jp_sitm6nqX0P-sIQXu8o0",
@@ -17,9 +16,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app); // 🔐 add this line
+const auth = getAuth(app);
+const storage = getStorage(app); // ✅ this is the instance you want
 
-export { app, db, auth };
+// ✅ Export the instance, not the function
+export { app, db, auth, storage };
 
 
 // Optional: Initialize Analytics (uncomment to enable)

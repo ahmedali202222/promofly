@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import useAuth from '../Hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar'; // ✅ Already imported
 
 const LoginForm = () => {
   const { currentUser } = useAuth();
@@ -32,34 +33,45 @@ const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleLogin} className="max-w-sm mx-auto mt-10 space-y-4 p-6 border rounded shadow">
-      <h2 className="text-2xl font-bold text-center">Admin Login</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        className="w-full border px-4 py-2 rounded"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        className="w-full border px-4 py-2 rounded"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button
-        type="submit"
-        className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
+    <>
+      <Navbar /> {/* ✅ Displayed above the form */}
+
+      <form
+        onSubmit={handleLogin}
+        className="max-w-sm mx-auto mt-10 space-y-4 p-6 border rounded shadow"
       >
-        Login
-      </button>
-      {message && (
-        <p className="text-sm mt-2 text-center text-gray-700">{message}</p>
-      )}
-    </form>
+        <h2 className="text-2xl font-bold text-center">Admin Login</h2>
+
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border px-4 py-2 rounded"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full border px-4 py-2 rounded"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
+        >
+          Login
+        </button>
+
+        {message && (
+          <p className="text-sm mt-2 text-center text-gray-700">{message}</p>
+        )}
+      </form>
+    </>
   );
 };
 
