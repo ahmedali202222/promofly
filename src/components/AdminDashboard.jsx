@@ -15,9 +15,10 @@ import useAuth from '../Hooks/useAuth';
 import SignOutButton from './SignOutButton';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const PAGE_SIZE = 6;
-const ADMIN_EMAIL = 'admin@yourdomain.com'; // 🔐 your admin email here
+const ADMIN_EMAIL = 'admin@yourdomain.com';
 
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
@@ -148,6 +149,8 @@ const AdminDashboard = () => {
     return matchText && matchPlatform;
   });
 
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
   return (
     <>
       <Navbar />
@@ -178,6 +181,42 @@ const AdminDashboard = () => {
             <button onClick={handleExportCSV} className="bg-gray-100 hover:bg-gray-200 text-sm px-4 py-2 rounded mt-2">
               ⬇️ Export CSV
             </button>
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <h4 className="font-bold text-sm mb-2">Platform Distribution</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={Object.entries(stats.platforms).map(([key, value]) => ({ name: key, value }))}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={80}
+                    label
+                  >
+                    {Object.entries(stats.platforms).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <h4 className="font-bold text-sm mb-2">Top Locations</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={Object.entries(stats.topLocations).map(([key, value]) => ({ name: key, count: value }))}
+                >
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#1e90ff" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
@@ -221,7 +260,15 @@ const AdminDashboard = () => {
                 <p><strong>Platforms:</strong> {promo.platforms?.join(', ')}</p>
                 <p><strong>Location:</strong> {promo.location}</p>
                 <p><strong>Budget:</strong> ${promo.budget}</p>
-                <p><strong>Status:</strong> {promo.status || 'Pending'}</p>
+                <p>
+                  <strong>Status:</strong> 
+                  <span className={`ml-1 px-2 py-1 text-xs rounded-full text-white ${
+                    promo.status === 'Approved' ? 'bg-green-500' :
+                    promo.status === 'Rejected' ? 'bg-red-500' : 'bg-yellow-500'
+                  }`}>
+                    {promo.status || 'Pending'}
+                  </span>
+                </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Submitted: {promo.createdAt?.toDate?.().toLocaleString() || 'Unknown'}
                 </p>
