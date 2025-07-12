@@ -1,43 +1,48 @@
 import React, { useEffect, useState, useRef } from 'react';
+// Firebase imports to read/write to Firestore
 import {
   collection,
   query,
   orderBy,
   limit,
   startAfter,
+  getDocs,
   onSnapshot,
   doc,
   updateDoc,
   deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase';
-import useAuth from '../Hooks/useAuth';
+import { db } from '../firebase'; // your firebase config
+import useAuth from '../Hooks/useAuth'; // custom hook to get current user
 import SignOutButton from './SignOutButton';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
+// Recharts for displaying data visually
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const PAGE_SIZE = 6;
-const ADMIN_EMAIL = 'admin@yourdomain.com';
+const PAGE_SIZE = 6; // Number of items per page
+const ADMIN_EMAIL = 'ack48212@gmail.com'; // Authorized admin email
 
 const AdminDashboard = () => {
-  const { currentUser } = useAuth();
-  const [promos, setPromos] = useState([]);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [newBadge, setNewBadge] = useState(false);
-  const [stats, setStats] = useState({ total: 0, platforms: {}, topLocations: {} });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [platformFilter, setPlatformFilter] = useState('All');
+  const { currentUser } = useAuth(); // Get the current logged-in user
+  const [promos, setPromos] = useState([]); // Store promo submissions
+  const [lastDoc, setLastDoc] = useState(null); // Track pagination
+  const [loading, setLoading] = useState(true); // Loading state
+  const [newBadge, setNewBadge] = useState(false); // New promo badge indicator
+  const [stats, setStats] = useState({ total: 0, platforms: {}, topLocations: {} }); // Stats summary
+  const [searchTerm, setSearchTerm] = useState(''); // Search bar input
+  const [platformFilter, setPlatformFilter] = useState('All'); // Filter by platform
   const navigate = useNavigate();
-  const firstLoad = useRef(true);
+  const firstLoad = useRef(true); // Ref to track if it's the first load
 
-  const isAdmin = currentUser?.email === ADMIN_EMAIL;
+  const isAdmin = currentUser?.email === ADMIN_EMAIL; // Check admin access
 
+  // Redirect to login if no user
   useEffect(() => {
     if (!currentUser) navigate('/login');
   }, [currentUser, navigate]);
 
+  // Initial fetch of promo data and stats
   useEffect(() => {
     const q = query(collection(db, 'promotions'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -49,9 +54,10 @@ const AdminDashboard = () => {
       if (!firstLoad.current) setNewBadge(true);
       firstLoad.current = false;
     });
-    return () => unsubscribe();
+    return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
+  // Load more promos for pagination (one-time fetch)
   const loadMore = async () => {
     if (!lastDoc) return;
     const next = query(
@@ -60,14 +66,21 @@ const AdminDashboard = () => {
       startAfter(lastDoc),
       limit(PAGE_SIZE)
     );
-    const snapshot = await onSnapshot(next, (snap) => {
+    try {
+      const snap = await getDocs(next);
       const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setPromos((prev) => [...prev, ...data]);
+      setPromos((prev) => {
+        const updated = [...prev, ...data];
+        calculateStats(updated);
+        return updated;
+      });
       setLastDoc(snap.docs[snap.docs.length - 1]);
-      calculateStats([...promos, ...data]);
-    });
+    } catch (err) {
+      console.error('Error loading more promos:', err);
+    }
   };
 
+  // Analyze stats from promos
   const calculateStats = (data) => {
     const platformCounts = {};
     const locationCounts = {};
@@ -87,6 +100,7 @@ const AdminDashboard = () => {
     });
   };
 
+    // Change status of a promo (Approved, Rejected, Pending)
   const handleStatusChange = async (promoId, newStatus) => {
     try {
       const ref = doc(db, 'promotions', promoId);
@@ -96,6 +110,7 @@ const AdminDashboard = () => {
     }
   };
 
+    // Save admin note
   const handleNoteChange = async (promoId, note) => {
     try {
       const ref = doc(db, 'promotions', promoId);
@@ -105,18 +120,21 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!isAdmin) return alert('❌ You do not have permission.');
-    if (window.confirm('Delete this promo?')) {
-      try {
-        await deleteDoc(doc(db, 'promotions', id));
-        setPromos((prev) => prev.filter((p) => p.id !== id));
-      } catch (err) {
-        console.error('Error deleting:', err);
-      }
+ // Delete a promo (admin only)
+ const handleDelete = async (id) => {
+  if (!isAdmin) return alert('❌ You do not have permission.');
+  if (window.confirm('Are you sure you want to delete this promo?')) {
+    try {
+      await deleteDoc(doc(db, 'promotions', id));
+      setPromos((prev) => prev.filter((promo) => promo.id !== id));
+      calculateStats(promos.filter((promo) => promo.id !== id));
+    } catch (err) {
+      console.error('Error deleting promo:', err);
     }
-  };
+  }
+};
 
+    // Export promos as CSV
   const handleExportCSV = () => {
     const headers = ['Offer Text', 'Media', 'Platforms', 'Location', 'Budget', 'Email', 'Status', 'Note', 'Submitted At'];
     const rows = promos.map((promo) => [
@@ -139,6 +157,7 @@ const AdminDashboard = () => {
     a.click();
   };
 
+    // Filter promos based on search and platform filter
   const filteredPromos = promos.filter((promo) => {
     const matchText =
       promo.offerText?.toLowerCase().includes(searchTerm.toLowerCase()) ||
