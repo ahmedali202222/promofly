@@ -4,6 +4,8 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import useAuth from "../Hooks/useAuth";
 
+const ADMIN_EMAIL = 'ack48212@gmail.com';
+
 const Navbar = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -26,9 +28,18 @@ const Navbar = () => {
           <NavLink to="/submit" className={navLinkClass}>
             Submit Promo
           </NavLink>
-          <NavLink to="/admin" className={navLinkClass}>
-            Admin
-          </NavLink>
+          {/* Show "Dashboard" only for logged-in business users */}
+          {currentUser && currentUser.email !== ADMIN_EMAIL && (
+            <NavLink to="/dashboard" className={navLinkClass}>
+              Dashboard
+            </NavLink>
+          )}
+          {/* Admin shortcut if needed */}
+          {currentUser?.email === ADMIN_EMAIL && (
+            <NavLink to="/admin" className={navLinkClass}>
+              Admin
+            </NavLink>
+          )}
         </div>
         <div>
           {currentUser ? (

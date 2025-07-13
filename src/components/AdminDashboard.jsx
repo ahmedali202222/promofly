@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-// Firebase imports to read/write to Firestore
+import { useNavigate } from 'react-router-dom';
 import {
   collection,
   query,
@@ -12,143 +12,96 @@ import {
   updateDoc,
   deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase'; // your firebase config
-import useAuth from '../Hooks/useAuth'; // custom hook to get current user
+import { db } from '../firebase';
+import useAuth from '../Hooks/useAuth';
+import Navbar from './Navbar';
 import SignOutButton from './SignOutButton';
-import Navbar from '../components/Navbar';
-import { useNavigate } from 'react-router-dom';
-// Recharts for displaying data visually
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from 'recharts';
 
-const PAGE_SIZE = 6; // Number of items per page
-const ADMIN_EMAIL = 'ack48212@gmail.com'; // Authorized admin email
+const PAGE_SIZE = 6;
+const ADMIN_EMAIL = 'ack48212@gmail.com';
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const AdminDashboard = () => {
-  const { currentUser } = useAuth(); // Get the current logged-in user
-  const [promos, setPromos] = useState([]); // Store promo submissions
-  const [lastDoc, setLastDoc] = useState(null); // Track pagination
-  const [loading, setLoading] = useState(true); // Loading state
-  const [newBadge, setNewBadge] = useState(false); // New promo badge indicator
-  const [stats, setStats] = useState({ total: 0, platforms: {}, topLocations: {} }); // Stats summary
-  const [searchTerm, setSearchTerm] = useState(''); // Search bar input
-  const [platformFilter, setPlatformFilter] = useState('All'); // Filter by platform
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const firstLoad = useRef(true); // Ref to track if it's the first load
+  const firstLoad = useRef(true);
 
-  const isAdmin = currentUser?.email === ADMIN_EMAIL; // Check admin access
+  const [promos, setPromos] = useState([]);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [stats, setStats] = useState({ total: 0, platforms: {}, locations: {} });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [platformFilter, setPlatformFilter] = useState('All');
 
-  // Redirect to login if no user
   useEffect(() => {
-    if (!currentUser) navigate('/login');
+    if (!currentUser) return;
+    if (currentUser.email !== ADMIN_EMAIL) navigate('/login');
   }, [currentUser, navigate]);
 
-  // Initial fetch of promo data and stats
   useEffect(() => {
     const q = query(collection(db, 'promotions'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPromos(data);
       setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      calculateStats(data);
-
-      if (!firstLoad.current) setNewBadge(true);
+      updateStats(data);
       firstLoad.current = false;
     });
-    return () => unsubscribe(); // Cleanup on unmount
+    return () => unsubscribe();
   }, []);
 
-  // Load more promos for pagination (one-time fetch)
-  const loadMore = async () => {
-    if (!lastDoc) return;
-    const next = query(
-      collection(db, 'promotions'),
-      orderBy('createdAt', 'desc'),
-      startAfter(lastDoc),
-      limit(PAGE_SIZE)
-    );
-    try {
-      const snap = await getDocs(next);
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setPromos((prev) => {
-        const updated = [...prev, ...data];
-        calculateStats(updated);
-        return updated;
+  const updateStats = (data) => {
+    const platforms = {};
+    const locations = {};
+    data.forEach(promo => {
+      promo.platforms?.forEach(p => {
+        platforms[p] = (platforms[p] || 0) + 1;
       });
-      setLastDoc(snap.docs[snap.docs.length - 1]);
-    } catch (err) {
-      console.error('Error loading more promos:', err);
-    }
-  };
-
-  // Analyze stats from promos
-  const calculateStats = (data) => {
-    const platformCounts = {};
-    const locationCounts = {};
-    data.forEach((promo) => {
-      promo.platforms?.forEach((p) => {
-        platformCounts[p] = (platformCounts[p] || 0) + 1;
-      });
-      const loc = promo.location?.trim().toLowerCase();
+      const loc = promo.location?.toLowerCase();
       if (loc) {
-        locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+        locations[loc] = (locations[loc] || 0) + 1;
       }
     });
-    setStats({
-      total: data.length,
-      platforms: platformCounts,
-      topLocations: locationCounts,
-    });
+    setStats({ total: data.length, platforms, locations });
   };
 
-    // Change status of a promo (Approved, Rejected, Pending)
-  const handleStatusChange = async (promoId, newStatus) => {
-    try {
-      const ref = doc(db, 'promotions', promoId);
-      await updateDoc(ref, { status: newStatus });
-    } catch (err) {
-      console.error('Error updating status:', err);
-    }
+  const handleStatusChange = async (id, status) => {
+    await updateDoc(doc(db, 'promotions', id), { status });
   };
 
-    // Save admin note
-  const handleNoteChange = async (promoId, note) => {
-    try {
-      const ref = doc(db, 'promotions', promoId);
-      await updateDoc(ref, { adminNote: note });
-    } catch (err) {
-      console.error('Error saving note:', err);
-    }
+  const handleNoteChange = async (id, note) => {
+    await updateDoc(doc(db, 'promotions', id), { adminNote: note });
   };
 
- // Delete a promo (admin only)
- const handleDelete = async (id) => {
-  if (!isAdmin) return alert('❌ You do not have permission.');
-  if (window.confirm('Are you sure you want to delete this promo?')) {
-    try {
+  const handleDelete = async (id) => {
+    if (window.confirm('Delete this promo?')) {
       await deleteDoc(doc(db, 'promotions', id));
-      setPromos((prev) => prev.filter((promo) => promo.id !== id));
-      calculateStats(promos.filter((promo) => promo.id !== id));
-    } catch (err) {
-      console.error('Error deleting promo:', err);
+      setPromos(prev => prev.filter(p => p.id !== id));
     }
-  }
-};
+  };
 
-    // Export promos as CSV
   const handleExportCSV = () => {
-    const headers = ['Offer Text', 'Media', 'Platforms', 'Location', 'Budget', 'Email', 'Status', 'Note', 'Submitted At'];
-    const rows = promos.map((promo) => [
-      `"${promo.offerText}"`,
-      promo.media || '',
-      (promo.platforms || []).join(' | '),
-      promo.location || '',
-      promo.budget || '',
-      promo.email || '',
-      promo.status || 'Pending',
-      promo.adminNote || '',
-      promo.createdAt?.toDate?.().toLocaleString() || '',
+    const headers = ['Offer', 'Location', 'Budget', 'Email', 'Platforms', 'Status', 'Note'];
+    const rows = promos.map(p => [
+      `"${p.offerText}"`,
+      p.location || '',
+      `$${p.budget}`,
+      p.email || '',
+      p.platforms?.join('|') || '',
+      p.status || 'Pending',
+      p.adminNote || '',
     ]);
-    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -157,94 +110,41 @@ const AdminDashboard = () => {
     a.click();
   };
 
-    // Filter promos based on search and platform filter
-  const filteredPromos = promos.filter((promo) => {
-    const matchText =
-      promo.offerText?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promo.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promo.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchPlatform =
-      platformFilter === 'All' || promo.platforms?.includes(platformFilter);
-    return matchText && matchPlatform;
-  });
+  const loadMore = async () => {
+    if (!lastDoc) return;
+    const q = query(
+      collection(db, 'promotions'),
+      orderBy('createdAt', 'desc'),
+      startAfter(lastDoc),
+      limit(PAGE_SIZE)
+    );
+    const snap = await getDocs(q);
+    const newData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setPromos(prev => [...prev, ...newData]);
+    setLastDoc(snap.docs[snap.docs.length - 1]);
+  };
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  const filteredPromos = promos.filter(promo => {
+    const matchesSearch =
+      promo.offerText?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      promo.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      promo.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPlatform = platformFilter === 'All' || promo.platforms?.includes(platformFilter);
+    return matchesSearch && matchesPlatform;
+  });
 
   return (
     <>
-      <Navbar />
-
-      <div className="max-w-6xl mx-auto mt-10 p-4">
+       <div className="max-w-6xl mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">
-            📊 Admin Dashboard {newBadge && <span className="ml-2 text-red-600 text-sm">🆕 New Promo!</span>}
-          </h2>
-          <SignOutButton />
+          <h1 className="text-2xl font-bold">📊 Admin Dashboard</h1>
         </div>
 
-        <div className="bg-white shadow rounded p-4 mb-6">
-          <div className="flex flex-wrap justify-between items-center gap-4">
-            <div>
-              <h3 className="font-bold mb-1">Summary</h3>
-              <p>Total Promos: {stats.total}</p>
-              <ul className="list-disc list-inside text-sm text-gray-700">
-                {Object.entries(stats.platforms).map(([p, c]) => <li key={p}>{p}: {c}</li>)}
-              </ul>
-            </div>
-            <div>
-              <p className="mb-1 font-bold">Top Locations:</p>
-              <ul className="list-disc list-inside text-sm text-gray-700">
-                {Object.entries(stats.topLocations).map(([l, c]) => <li key={l}>{l}: {c}</li>)}
-              </ul>
-            </div>
-            <button onClick={handleExportCSV} className="bg-gray-100 hover:bg-gray-200 text-sm px-4 py-2 rounded mt-2">
-              ⬇️ Export CSV
-            </button>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div>
-              <h4 className="font-bold text-sm mb-2">Platform Distribution</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={Object.entries(stats.platforms).map(([key, value]) => ({ name: key, value }))}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={80}
-                    label
-                  >
-                    {Object.entries(stats.platforms).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div>
-              <h4 className="font-bold text-sm mb-2">Top Locations</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart
-                  data={Object.entries(stats.topLocations).map(([key, value]) => ({ name: key, count: value }))}
-                >
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#1e90ff" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Search + Filter */}
-        <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
           <input
-            type="text"
-            placeholder="Search offer, location, or email"
             className="border px-3 py-2 rounded w-full md:w-1/2"
+            placeholder="Search promos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -254,93 +154,126 @@ const AdminDashboard = () => {
             className="border px-3 py-2 rounded w-full md:w-1/4"
           >
             <option value="All">All Platforms</option>
-            <option value="TikTok">TikTok</option>
             <option value="Instagram">Instagram</option>
             <option value="Facebook">Facebook</option>
             <option value="Snapchat">Snapchat</option>
+            <option value="TikTok">TikTok</option>
           </select>
         </div>
 
-        {/* Promos */}
-        {filteredPromos.length === 0 ? (
-          <p>No promos found.</p>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredPromos.map((promo) => (
-              <div key={promo.id} className="border p-4 rounded bg-white shadow">
-                <h4 className="font-bold mb-2">{promo.offerText}</h4>
-                {promo.media?.includes('.mp4') || promo.media?.includes('video') ? (
-                  <video src={promo.media} controls className="w-full rounded mb-2" />
-                ) : promo.media ? (
-                  <img src={promo.media} alt="promo" className="w-full rounded mb-2" />
-                ) : (
-                  <p className="text-sm text-gray-500">No media uploaded</p>
-                )}
-                <p><strong>Platforms:</strong> {promo.platforms?.join(', ')}</p>
-                <p><strong>Location:</strong> {promo.location}</p>
-                <p><strong>Budget:</strong> ${promo.budget}</p>
-                <p>
-                  <strong>Status:</strong> 
-                  <span className={`ml-1 px-2 py-1 text-xs rounded-full text-white ${
-                    promo.status === 'Approved' ? 'bg-green-500' :
-                    promo.status === 'Rejected' ? 'bg-red-500' : 'bg-yellow-500'
-                  }`}>
-                    {promo.status || 'Pending'}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Submitted: {promo.createdAt?.toDate?.().toLocaleString() || 'Unknown'}
-                </p>
-
-                {/* Status & Notes */}
-                {isAdmin && (
-                  <>
-                    <div className="mt-3">
-                      <label className="text-sm font-medium block mb-1">Update Status:</label>
-                      <select
-                        value={promo.status || 'Pending'}
-                        onChange={(e) => handleStatusChange(promo.id, e.target.value)}
-                        className="border px-2 py-1 rounded w-full"
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                    </div>
-                    <div className="mt-3">
-                      <label className="text-sm font-medium block mb-1">Admin Note:</label>
-                      <textarea
-                        rows={2}
-                        defaultValue={promo.adminNote || ''}
-                        onBlur={(e) => handleNoteChange(promo.id, e.target.value)}
-                        placeholder="Write an internal note..."
-                        className="w-full border px-2 py-1 rounded"
-                      />
-                    </div>
-                    <button
-                      onClick={() => handleDelete(promo.id)}
-                      className="mt-3 text-red-600 text-sm underline"
-                    >
-                      🗑 Delete
-                    </button>
-                  </>
-                )}
-              </div>
-            ))}
+        {/* Charts */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <h3 className="font-bold mb-2">Platform Usage</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={Object.entries(stats.platforms).map(([k, v]) => ({ name: k, value: v }))}
+                  dataKey="value"
+                  outerRadius={70}
+                  label
+                >
+                  {Object.entries(stats.platforms).map((_, idx) => (
+                    <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        )}
 
-        {/* Load More */}
-        {lastDoc && (
-          <div className="text-center mt-6">
+          <div>
+            <h3 className="font-bold mb-2">Top Locations</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={Object.entries(stats.locations).map(([k, v]) => ({ name: k, value: v }))}
+              >
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Promo List */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPromos.map((promo) => (
+            <div key={promo.id} className="bg-white p-4 shadow rounded">
+              <h4 className="font-bold mb-2">{promo.offerText}</h4>
+              {promo.media?.includes('.mp4') ? (
+                <video src={promo.media} controls className="w-full mb-2" />
+              ) : (
+                <img src={promo.media} alt="media" className="w-full mb-2 rounded" />
+              )}
+              <p><strong>Location:</strong> {promo.location}</p>
+              <p><strong>Platforms:</strong> {promo.platforms?.join(', ')}</p>
+              <p><strong>Budget:</strong> ${promo.budget}</p>
+              <p><strong>Email:</strong> {promo.email}</p>
+              <p>
+                <strong>Status:</strong>{' '}
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    promo.status === 'Approved'
+                      ? 'bg-green-500 text-white'
+                      : promo.status === 'Rejected'
+                      ? 'bg-red-500 text-white'
+                      : 'bg-yellow-500 text-black'
+                  }`}
+                >
+                  {promo.status || 'Pending'}
+                </span>
+              </p>
+
+              {/* Admin Controls */}
+              <div className="mt-2">
+                <label className="text-sm font-medium">Update Status</label>
+                <select
+                  value={promo.status || 'Pending'}
+                  onChange={(e) => handleStatusChange(promo.id, e.target.value)}
+                  className="w-full mt-1 border rounded px-2 py-1"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div className="mt-2">
+                <label className="text-sm font-medium">Admin Note</label>
+                <textarea
+                  defaultValue={promo.adminNote}
+                  onBlur={(e) => handleNoteChange(promo.id, e.target.value)}
+                  rows={2}
+                  className="w-full mt-1 border rounded px-2 py-1"
+                />
+              </div>
+
+              <button
+                onClick={() => handleDelete(promo.id)}
+                className="text-red-600 mt-2 text-sm underline"
+              >
+                🗑 Delete
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Load More & Export */}
+        <div className="mt-6 flex justify-between items-center">
+          <button onClick={handleExportCSV} className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+            ⬇️ Export CSV
+          </button>
+          {lastDoc && (
             <button
               onClick={loadMore}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Load More
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db, storage } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import Navbar from "../components/Navbar";
+import { useDropzone } from 'react-dropzone';
+import toast, { Toaster } from 'react-hot-toast';
+import useAuth from '../Hooks/useAuth';
 
 const PromoForm = () => {
+  const { currentUser } = useAuth();
+
   const [offerText, setOfferText] = useState('');
   const [mediaFile, setMediaFile] = useState(null);
   const [platforms, setPlatforms] = useState([]);
@@ -13,37 +18,70 @@ const PromoForm = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [message, setMessage] = useState('');
 
   const handlePlatformChange = (e) => {
     const value = e.target.value;
     setPlatforms((prev) =>
-      prev.includes(value)
-        ? prev.filter((p) => p !== value)
-        : [...prev, value]
+      prev.includes(value) ? prev.filter((p) => p !== value) : [...prev, value]
     );
   };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: {
+      'image/*': [],
+      'video/*': []
+    },
+    maxSize: 10 * 1024 * 1024,
+    onDrop: (acceptedFiles) => {
+      if (acceptedFiles.length > 0) {
+        setMediaFile(acceptedFiles[0]);
+        localStorage.setItem('draftMedia', JSON.stringify(acceptedFiles[0]));
+      } else {
+        toast.error('❌ File must be under 10MB and a supported format');
+      }
+    },
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem('promoDraft');
+    if (saved) {
+      const draft = JSON.parse(saved);
+      setOfferText(draft.offerText || '');
+      setPlatforms(draft.platforms || []);
+      setLocation(draft.location || '');
+      setBudget(draft.budget || '');
+      setEmail(draft.email || '');
+    }
+  }, []);
+
+  useEffect(() => {
+    const draft = {
+      offerText,
+      platforms,
+      location,
+      budget,
+      email
+    };
+    localStorage.setItem('promoDraft', JSON.stringify(draft));
+  }, [offerText, platforms, location, budget, email]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
     setUploadProgress(0);
 
-    if (!budget || budget < 5 || budget > 100) {
-      setMessage('❌ Budget must be between $5 and $100');
+    if (!offerText.trim()) {
+      toast.error('Offer text is required');
       setLoading(false);
       return;
     }
-
     if (!mediaFile) {
-      setMessage('❌ Please upload an image or video');
+      toast.error('Please upload a media file');
       setLoading(false);
       return;
     }
-
-    if (mediaFile.size > 10 * 1024 * 1024) {
-      setMessage('❌ File must be under 10MB');
+    if (budget < 5 || budget > 100) {
+      toast.error('Budget must be between $5 and $100');
       setLoading(false);
       return;
     }
@@ -60,35 +98,45 @@ const PromoForm = () => {
         },
         (error) => {
           console.error('Upload error:', error);
-          setMessage('❌ Upload failed. Please try again.');
+          toast.error('❌ Upload failed. Please try again.');
           setLoading(false);
         },
         async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-          await addDoc(collection(db, 'promotions'), {
-            offerText,
-            media: downloadURL,
-            platforms,
-            location,
-            budget: parseFloat(budget),
-            email,
-            createdAt: serverTimestamp(),
-          });
-
-          setMessage('✅ Promo submitted successfully!');
-          setOfferText('');
-          setMediaFile(null);
-          setPlatforms([]);
-          setLocation('');
-          setBudget('');
-          setEmail('');
-          setUploadProgress(0);
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            await addDoc(collection(db, 'promotions'), {
+              offerText,
+              media: downloadURL,
+              platforms,
+              location,
+              budget: parseFloat(budget),
+              email: currentUser?.email || email || '',
+              userId: currentUser?.uid || '',
+              createdAt: serverTimestamp(),
+              status: 'Pending',
+              adminNote: ''
+            });
+            toast.success('✅ Promo submitted successfully!');
+            setOfferText('');
+            setMediaFile(null);
+            setPlatforms([]);
+            setLocation('');
+            setBudget('');
+            setEmail('');
+            setUploadProgress(0);
+            localStorage.removeItem('promoDraft');
+            localStorage.removeItem('draftMedia');
+          } catch (err) {
+            console.error('Submission error:', err);
+            toast.error('❌ Failed to submit promo.');
+          } finally {
+            setLoading(false);
+          }
         }
       );
     } catch (error) {
       console.error('❌ Error submitting promo:', error);
-      setMessage('❌ Failed to submit promo. Please try again.');
+      toast.error('❌ Failed to submit promo. Please try again.');
       setLoading(false);
     }
   };
@@ -96,25 +144,37 @@ const PromoForm = () => {
   return (
     <>
       <Navbar />
+      <Toaster position="top-right" />
       <div className="max-w-xl mx-auto mt-10 bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-4 text-center">📢 Submit a New Promo</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              placeholder="What's the offer?"
+              value={offerText}
+              onChange={(e) => setOfferText(e.target.value)}
+              required
+              maxLength={120}
+              className="w-full border border-gray-300 rounded px-4 py-2"
+            />
+            <p className="text-sm text-right text-gray-500 mt-1">{offerText.length}/120</p>
+          </div>
 
-          <input
-            type="text"
-            placeholder="What's the offer?"
-            value={offerText}
-            onChange={(e) => setOfferText(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
+          <div {...getRootProps()} className="border-2 border-dashed border-gray-300 rounded px-4 py-8 text-center text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">
+            <input {...getInputProps()} />
+            <p>📂 Drag & drop media here, or click to select</p>
+          </div>
 
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={(e) => setMediaFile(e.target.files[0])}
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
+          {mediaFile && (
+            <div className="mt-2">
+              {mediaFile.type.startsWith('video') ? (
+                <video src={URL.createObjectURL(mediaFile)} controls className="w-full rounded" />
+              ) : (
+                <img src={URL.createObjectURL(mediaFile)} alt="Preview" className="w-full rounded" />
+              )}
+            </div>
+          )}
 
           {uploadProgress > 0 && (
             <div className="w-full bg-gray-200 rounded h-4 overflow-hidden">
@@ -164,26 +224,24 @@ const PromoForm = () => {
             required
           />
 
-          <input
-            type="email"
-            placeholder="Your Email (optional)"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
+          {!currentUser && (
+            <input
+              type="email"
+              placeholder="Your Email (optional)"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded px-4 py-2"
+            />
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 relative"
           >
-            {loading ? 'Submitting...' : 'Submit Promo'}
+            {loading ? <span className="animate-pulse">⏳ Submitting...</span> : 'Submit Promo'}
           </button>
         </form>
-
-        {message && (
-          <p className="text-center mt-4 text-sm text-gray-700">{message}</p>
-        )}
       </div>
     </>
   );
