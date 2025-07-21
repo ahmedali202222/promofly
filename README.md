@@ -1,47 +1,51 @@
-Promofly
-Promofly is a promotional campaign management app with real-time status updates and automated email notifications.
+# Promofly
+
+Promofly is a promotional campaign management app with real-time status updates and automated email notifications.  
 Built with React, Vite, and TailwindCSS for the frontend, and Firebase Functions for backend automation.
 
-Features
-React + Vite powered frontend with routing and charts (Recharts)
+---
 
-Firebase Functions backend to send status update emails triggered by Firestore changes
+## Features
 
-Email sending via Resend API integration
+- React + Vite powered frontend with routing and charts (Recharts)  
+- Firebase Functions backend to send status update emails triggered by Firestore changes  
+- Email sending via Resend API integration  
+- TailwindCSS for styling  
+- Firebase Emulator support for local development  
 
-TailwindCSS for styling
+---
 
-Firebase Emulator support for local development
+## Project Structure
 
-Project Structure
-bash
-Copy
-Edit
 promofly/
-├── functions/          # Firebase Functions backend code  
-├── public/             # Static assets for frontend  
-├── src/                # React frontend source code  
-├── package.json        # Project configuration & scripts  
-├── vite.config.js      # Vite configuration  
-└── README.md           # This file  
-Getting Started
-Prerequisites
-Node.js v18 or higher
+├── functions/ # Firebase Functions backend code
+├── public/ # Static assets for frontend
+├── src/ # React frontend source code
+├── package.json # Project configuration & scripts
+├── vite.config.js # Vite configuration
+└── README.md # This file
 
-npm
-
-Firebase CLI (npm install -g firebase-tools)
-
-Firebase project with Firestore enabled
-
-Resend API key for sending emails
-
-Installation
-Clone the repo
-
-bash
+yaml
 Copy
 Edit
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js v18 or higher  
+- npm  
+- Firebase CLI (`npm install -g firebase-tools`)  
+- Firebase project with Firestore enabled  
+- Resend API key for sending emails  
+
+### Installation
+
+1. Clone the repo
+
+```bash
 git clone https://github.com/yourusername/promofly.git
 cd promofly
 Install frontend dependencies
@@ -121,4 +125,3 @@ Resend API
 
 License
 MIT © Promofly
-
