@@ -67,3 +67,35 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+node_modules
+node_modules
+
+
+
+# node / vite
+node_modules/
+dist/
+.vite/
+*.log
+.DS_Store
+
+# env / credentials
+.env
+.env.*.local
+.env.local
+
+# firebase / emulator
+.firebase/
+firestore-debug.log
+ui-debug.log
+
+# gcloud SDK (you had this inside the repo earlier)
+functions/google-cloud-sdk/
+google-cloud-sdk/
+
+# editor
+.vscode/
+.idea/
+
+# misc
+coverage/
