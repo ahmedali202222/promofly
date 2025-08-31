@@ -3,6 +3,8 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+import * as FFmpeg from "@ffmpeg/ffmpeg";
+const { createFFmpeg, fetchFile } = FFmpeg;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
