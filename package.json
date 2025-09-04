@@ -14,12 +14,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "browser-image-compression": "^2.0.2",
     "firebase": "^10.12.0",
+    "framer-motion": "^12.23.12",
+    "html2canvas": "^1.4.1",
+    "konva": "^9.3.22",
+    "lucide-react": "^0.542.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.3.8",
-    "react-hot-toast": "^2.5.2",
+    "react-hot-toast": "^2.6.0",
+    "react-konva": "^18.2.12",
     "react-router-dom": "^6.22.3",
     "react-webcam": "^7.2.0",
     "recharts": "^3.1.0"

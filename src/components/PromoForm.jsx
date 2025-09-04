@@ -8,7 +8,7 @@ import toast, { Toaster } from "react-hot-toast";
 import useAuth from "../Hooks/useAuth";
 import imageCompression from "browser-image-compression";
 import Modal from "./Modal";
-import CameraStudio from "./camera/CameraStudio";
+import CameraStudio from "../camera/CameraStudio";
 
 const DRAFT_KEY = "promoDraft.v1";
 
@@ -484,7 +484,7 @@ const EnhancedPromoForm = () => {
       </div>
 
       {/* Camera Modal */}
-      <Modal open={showCamera} onClose={() => setShowCamera(false)}>
+      <Modal open={showCamera} onClose={() => setShowCamera(false)} noPadding>
         <div className="p-2">
           <CameraStudio
             onClose={() => setShowCamera(false)}
