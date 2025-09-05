@@ -1,127 +1,150 @@
-# Promofly
+# Promofly - Promotional Content Management Platform
 
-Promofly is a promotional campaign management app with real-time status updates and automated email notifications.  
-Built with React, Vite, and TailwindCSS for the frontend, and Firebase Functions for backend automation.
+A modern web application for managing promotional content with photo/video capture, admin approval workflow, and real-time status tracking.
 
----
+## 🏗️ Project Structure
 
-## Features
+```
+src/
+├── pages/                    # Page components
+│   ├── Home.jsx             # Landing page
+│   ├── Login.jsx            # User login
+│   ├── Submit.jsx           # Content submission with camera
+│   ├── Dashboard.jsx        # User dashboard
+│   └── admin/               # Admin pages
+│       ├── AdminLogin.jsx   # Admin login
+│       ├── AdminDashboard.jsx # Pending content list
+│       └── AdminPromoDetail.jsx # Content review
+├── components/              # Reusable components
+│   ├── guards/              # Route protection
+│   │   ├── ProtectedRoute.jsx
+│   │   └── AdminRoute.jsx
+│   ├── shared/              # Shared components
+│   │   └── Navbar.jsx
+│   └── Modal.jsx            # Modal component
+├── camera/                  # Camera functionality
+│   ├── CameraStudio.jsx     # Main camera component
+│   ├── StickerCanvas.jsx    # Sticker overlay system
+│   ├── StickerTray.jsx      # Sticker selection UI
+│   └── index.js             # Camera exports
+├── contexts/                # React contexts
+│   └── AuthContext.jsx      # Authentication context
+├── hooks/                   # Custom hooks
+│   └── useAuth.js           # Auth hook re-export
+├── utils/                   # Utility functions
+│   └── adminUtils.js        # Admin management utilities
+├── firebase.js              # Firebase configuration
+├── App.jsx                  # Main app component
+└── main.jsx                 # App entry point
+```
 
-- React + Vite powered frontend with routing and charts (Recharts)  
-- Firebase Functions backend to send status update emails triggered by Firestore changes  
-- Email sending via Resend API integration  
-- TailwindCSS for styling  
-- Firebase Emulator support for local development  
+## 🚀 Features
 
----
+### User Features
+- **Photo/Video Capture**: Built-in camera with stickers and filters
+- **Content Submission**: Upload media with title and description
+- **Dashboard**: View submitted content with status tracking
+- **Real-time Updates**: Live status updates via Firestore
 
-## Project Structure
+### Admin Features
+- **Content Review**: Review pending promotional content
+- **Approve/Reject**: Manage content approval workflow
+- **Admin Dashboard**: Overview of all pending content
+- **Secure Access**: Admin-only routes with custom claims
 
-promofly/
-├── functions/ # Firebase Functions backend code
-├── public/ # Static assets for frontend
-├── src/ # React frontend source code
-├── package.json # Project configuration & scripts
-├── vite.config.js # Vite configuration
-└── README.md # This file
+### Technical Features
+- **React Router v6**: Modern routing with route guards
+- **Firebase Integration**: Authentication, Storage, and Firestore
+- **Real-time Data**: Live updates with Firestore listeners
+- **Responsive Design**: Mobile-friendly Tailwind CSS
+- **Type Safety**: Clean component structure
 
-yaml
-Copy
-Edit
+## 🔐 Authentication & Authorization
 
----
+- **Firebase Auth**: Email/password authentication
+- **Custom Claims**: Admin status via Firebase custom claims
+- **Route Guards**: Protected and admin-only routes
+- **Secure Rules**: Firestore security rules
 
-## Getting Started
+## 📱 Camera System
 
-### Prerequisites
+- **Photo Mode**: Capture photos with stickers and filters
+- **Video Mode**: Record videos with MediaRecorder API
+- **Sticker System**: Drag, resize, and rotate stickers
+- **Object-Cover**: No black bars, full-screen preview
+- **Performance**: Optimized for mobile devices
 
-- Node.js v18 or higher  
-- npm  
-- Firebase CLI (`npm install -g firebase-tools`)  
-- Firebase project with Firestore enabled  
-- Resend API key for sending emails  
+## 🗄️ Database Schema
 
-### Installation
+### Promos Collection
+```javascript
+{
+  title: string,
+  description: string,
+  fileUrl: string,
+  fileName: string,
+  fileType: string,
+  userId: string,
+  userEmail: string,
+  status: 'pending' | 'approved' | 'rejected',
+  createdAt: timestamp,
+  updatedAt: timestamp
+}
+```
 
-1. Clone the repo
+## 🚀 Getting Started
 
-```bash
-git clone https://github.com/yourusername/promofly.git
-cd promofly
-Install frontend dependencies
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-bash
-Copy
-Edit
-npm install
-Install backend dependencies
+2. **Configure Firebase**
+   - Set up Firebase project
+   - Add configuration to `src/firebase.js`
+   - Deploy Firestore rules from `firestore.rules`
 
-bash
-Copy
-Edit
-cd functions
-npm install
-cd ..
-Add your Resend API key in functions/index.js
+3. **Set Admin Claims**
+   - Use Firebase Admin SDK to set custom claims
+   - Example: `{ admin: true }` for admin users
 
-js
-Copy
-Edit
-const resend = new Resend("YOUR_RESEND_API_KEY_HERE");
-Login to Firebase and select your project
+4. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
 
-bash
-Copy
-Edit
-firebase login
-firebase use your-project-id
-Running Locally
-Start the Firebase Functions shell:
+## 🔧 Configuration
 
-bash
-Copy
-Edit
-npm run shell
-Start the frontend development server:
+### Firebase Setup
+- Authentication: Email/Password enabled
+- Firestore: Rules deployed from `firestore.rules`
+- Storage: Rules for file uploads
+- Custom Claims: Admin status management
 
-bash
-Copy
-Edit
-npm run dev
-Open http://localhost:5173 in your browser.
+### Environment Variables
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
 
-Deployment
-Deploy Firebase Functions:
+## 📝 Scripts
 
-bash
-Copy
-Edit
-npm run deploy
-(Optional) Deploy frontend to Firebase Hosting:
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
 
-bash
-Copy
-Edit
-firebase deploy --only hosting
-Useful Commands
-Command	Description
-npm run dev	Start frontend dev server (Vite)
-npm run shell	Start Firebase Functions shell
-npm run deploy	Deploy Firebase Functions
-firebase emulators:start	Start Firebase emulators locally
+## 🎯 Roadmap
 
-Technologies Used
-React
+- [ ] Email notifications for status changes
+- [ ] Bulk admin actions
+- [ ] Content analytics dashboard
+- [ ] Advanced filtering and search
+- [ ] Mobile app (React Native)
 
-Vite
+## 📄 License
 
-Tailwind CSS
-
-Firebase Functions
-
-Firestore
-
-Resend API
-
-License
-MIT © Promofly
+MIT License - see LICENSE file for details

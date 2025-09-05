@@ -99,6 +99,7 @@ export default function CameraStudio({ onClose, onCapture }) {
 
   // Helper function to pick supported MIME type
   function pickSupportedMime() {
+    
     const candidates = [
       "video/webm;codecs=vp9",
       "video/webm;codecs=vp8",

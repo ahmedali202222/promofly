@@ -13,6 +13,7 @@ const StickerCanvas = forwardRef(function StickerCanvas({ className = "" }, ref)
 
   // public API
   useImperativeHandle(ref, () => ({
+    get els() { return els; }, // Expose els array for external access
     addEmoji(emoji) {
       setEls((p) => p.concat({
         id: crypto.randomUUID(),

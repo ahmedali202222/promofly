@@ -1,28 +1,57 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import SanityUploadButton from './components/SanityUploadButton'; // <-- add this
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute, AdminRoute, Navbar } from './components';
+import { 
+  Home, 
+  Login, 
+  Signup,
+  Submit, 
+  Dashboard, 
+  AdminLogin, 
+  AdminPromoDetail 
+} from './pages';
+import AdminDashboard from './pages/admin/Dashboard';
 
-const App = () => {
+function App() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
-      <h1 className="text-4xl font-bold text-blue-600 mb-6">Welcome to Promofly 🚀</h1>
-
-      {/* Dev-only sanity check (hidden in production) */}
-      <div className="mb-6">
-        <SanityUploadButton />
-      </div>
-
-      <div className="flex gap-6">
-        <Link to="/submit" className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          Submit Promo
-        </Link>
-
-        <Link to="/login" className="px-6 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-100">
-          Admin Login
-        </Link>
-      </div>
-    </div>
+    <AuthProvider>
+      <Router future={{ v7_relativeSplatPath: true }}>
+        <div className="min-h-screen">
+          <Navbar />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            
+            {/* Protected routes */}
+            <Route path="/submit" element={
+              <ProtectedRoute>
+                <Submit />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/promos/:id" element={
+              <AdminRoute>
+                <AdminPromoDetail />
+              </AdminRoute>
+            } />
+            
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
-};
+}
 
 export default App;

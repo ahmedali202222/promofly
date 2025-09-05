@@ -12,23 +12,23 @@ export default function StickerTray({ onAddEmoji, onAddLabel, onAddText }) {
   const emojis = ["✨","🔥","💥","🎉","⭐","🛍️","💯","⚡"];
 
   return (
-    <div className="w-full bg-black/60 backdrop-blur-xl text-white rounded-2xl p-3">
-      <div className="flex flex-wrap gap-2 mb-3">
+    <div className="w-full bg-black/60 backdrop-blur-xl text-white rounded-xl p-2">
+      <div className="flex flex-wrap gap-1 mb-2">
         {labels.map((l) => (
           <button key={l.t}
             onClick={() => onAddLabel(l.t, l.bg)}
-            className="px-3 py-1.5 rounded-xl font-bold"
+            className="px-2 py-1 rounded-lg font-bold text-xs"
             style={{ background: l.bg }}
           >
             {l.t}
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap gap-1 mb-2">
         {emojis.map((e) => (
           <button key={e}
             onClick={() => onAddEmoji(e)}
-            className="px-3 py-2 rounded-xl bg-white/10 text-2xl">
+            className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-sm hover:bg-white/20">
             {e}
           </button>
         ))}
@@ -39,9 +39,9 @@ export default function StickerTray({ onAddEmoji, onAddLabel, onAddText }) {
             const t = prompt("Enter text");
             if (t) onAddText(t);
           }}
-          className="px-3 py-2 rounded-xl bg-white text-black font-semibold"
+          className="px-2 py-1 rounded-lg bg-white text-black font-semibold text-xs"
         >
-          + Add Text
+          + Text
         </button>
       </div>
     </div>

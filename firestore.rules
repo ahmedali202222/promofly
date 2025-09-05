@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Promos collection rules
+    match /promos/{promoId} {
+      // Users can read their own promos
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Users can create promos
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId
+        && request.resource.data.status == 'pending';
+      
+      // Only admins can update promos (approve/reject)
+      allow update: if request.auth != null 
+        && request.auth.token.admin == true
+        && request.resource.data.status in ['approved', 'rejected'];
+      
+      // Only admins can delete promos
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Admin users collection (for managing admin status)
+    match /adminUsers/{userId} {
+      // Only admins can read admin users
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      
+      // Only admins can create/update admin users
+      allow create, update: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
