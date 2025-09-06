@@ -1,27 +1,65 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Modal } from '../components';
 import { CameraStudio } from '../camera';
+import PreviewModal from '../components/PreviewModal';
 
 const Submit = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [city, setCity] = useState('');
   const [files, setFiles] = useState([]);
   const [showCamera, setShowCamera] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [previewType, setPreviewType] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef(null);
 
+  // Handle duplicate data from navigation state
+  useEffect(() => {
+    if (location.state?.duplicateData) {
+      const { title, description, city } = location.state.duplicateData;
+      setTitle(title || '');
+      setDescription(description || '');
+      setCity(city || '');
+    }
+  }, [location.state]);
+
   const handleFileUpload = (uploadedFile) => {
-    setFiles(prev => [...prev, uploadedFile]);
+    // Determine file type
+    const fileType = uploadedFile.type.startsWith('video/') ? 'video' : 'image';
+    
+    // Show preview modal
+    setPreviewFile(uploadedFile);
+    setPreviewType(fileType);
+    setShowPreview(true);
     setShowCamera(false);
+  };
+
+  const handleRetake = () => {
+    setShowPreview(false);
+    setPreviewFile(null);
+    setPreviewType('');
+    setShowCamera(true);
+  };
+
+  const handleUseFile = () => {
+    if (previewFile) {
+      setFiles(prev => [...prev, previewFile]);
+    }
+    setShowPreview(false);
+    setPreviewFile(null);
+    setPreviewType('');
   };
 
   const handleFileSelect = (e) => {
@@ -67,38 +105,39 @@ const Submit = () => {
       return;
     }
 
+    if (!title.trim()) {
+      setError('Please enter a title');
+      return;
+    }
+
+    if (!city.trim()) {
+      setError('Please enter a city');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      // Upload all files to Storage and collect URLs
-      const fileUrls = [];
-      const fileNames = [];
-      const fileTypes = [];
+      // Upload the first file (main media) to Storage
+      const mainFile = files[0];
+      const fileRef = ref(storage, `promos/${currentUser.uid}/${Date.now()}_${mainFile.name}`);
+      await uploadBytes(fileRef, mainFile);
+      const mediaURL = await getDownloadURL(fileRef);
 
-      for (const file of files) {
-        const fileRef = ref(storage, `promos/${currentUser.uid}/${Date.now()}_${file.name}`);
-        await uploadBytes(fileRef, file);
-        const downloadURL = await getDownloadURL(fileRef);
-        
-        fileUrls.push(downloadURL);
-        fileNames.push(file.name);
-        fileTypes.push(file.type);
-      }
+      // Determine media type
+      const mediaType = mainFile.type.startsWith('video/') ? 'video' : 'image';
 
-      // Create Firestore document with multiple files
+      // Create Firestore document according to specification
       await addDoc(collection(db, 'promos'), {
-        title,
-        description,
-        fileUrls, // Array of URLs
-        fileNames, // Array of file names
-        fileTypes, // Array of file types
-        fileCount: files.length,
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        status: 'pending',
+        ownerUid: currentUser.uid,
+        mediaURL: mediaURL,
+        mediaType: mediaType,
+        title: title.trim(),
+        desc: description.trim(),
+        city: city.trim(),
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        status: 'Pending'
       });
 
       navigate('/dashboard');
@@ -148,18 +187,33 @@ const Submit = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                    City *
                   </label>
-                  <textarea
-                    id="description"
-                    rows={3}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                  <input
+                    type="text"
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                    placeholder="Describe your content"
+                    placeholder="Enter your city"
+                    required
                   />
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                  placeholder="Describe your content"
+                />
               </div>
 
               <div>
@@ -329,6 +383,15 @@ const Submit = () => {
           />
         </div>
       </Modal>
+
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        mediaFile={previewFile}
+        mediaType={previewType}
+        onRetake={handleRetake}
+        onUse={handleUseFile}
+      />
     </div>
   );
 };

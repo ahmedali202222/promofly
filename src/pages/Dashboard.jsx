@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const [promos, setPromos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!currentUser) return;
@@ -33,16 +35,54 @@ const Dashboard = () => {
     return unsubscribe;
   }, [currentUser]);
 
+  const handleDuplicate = (promo) => {
+    // Navigate to submit page with pre-filled data
+    navigate('/submit', { 
+      state: { 
+        duplicateData: {
+          title: `${promo.title} (Copy)`,
+          description: promo.desc,
+          city: promo.city
+        }
+      }
+    });
+  };
+
+  const handleResubmit = (promo) => {
+    // Navigate to submit page with pre-filled data
+    navigate('/submit', { 
+      state: { 
+        duplicateData: {
+          title: promo.title,
+          description: promo.desc,
+          city: promo.city
+        }
+      }
+    });
+  };
+
+  const handleDelete = async (promoId) => {
+    if (window.confirm('Are you sure you want to delete this promo? This action cannot be undone.')) {
+      try {
+        await deleteDoc(doc(db, 'promos', promoId));
+        console.log('Promo deleted successfully');
+      } catch (error) {
+        console.error('Error deleting promo:', error);
+        alert('Failed to delete promo. Please try again.');
+      }
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusClasses = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800'
+      'Pending': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'Approved': 'bg-green-100 text-green-800 border-green-200',
+      'Rejected': 'bg-red-100 text-red-800 border-red-200'
     };
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusClasses[status] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+        {status}
       </span>
     );
   };
@@ -180,31 +220,54 @@ const Dashboard = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex-shrink-0">
-                        {promo.fileUrls && promo.fileUrls.length > 0 ? (
-                          <div className="space-y-1">
-                            {promo.fileUrls.map((url, index) => (
-                              <a
-                                key={index}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                              >
-                                View File {promo.fileUrls.length > 1 ? `${index + 1}` : ''}
-                              </a>
-                            ))}
-                          </div>
-                        ) : promo.fileUrl ? (
-                          <a
-                            href={promo.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                      <div className="flex-shrink-0 flex flex-col items-end space-y-2">
+                        {/* Status Badge */}
+                        <div>
+                          {getStatusBadge(promo.status)}
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex space-x-2">
+                          {/* Duplicate Button */}
+                          <button
+                            onClick={() => handleDuplicate(promo)}
+                            className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                           >
-                            View File
-                          </a>
-                        ) : null}
+                            Duplicate
+                          </button>
+                          
+                          {/* Resubmit Button (only if Rejected) */}
+                          {promo.status === 'Rejected' && (
+                            <button
+                              onClick={() => handleResubmit(promo)}
+                              className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors"
+                            >
+                              Resubmit
+                            </button>
+                          )}
+                          
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => handleDelete(promo.id)}
+                            className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                        
+                        {/* File Links */}
+                        <div className="text-right">
+                          {promo.mediaURL ? (
+                            <a
+                              href={promo.mediaURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                            >
+                              View Media
+                            </a>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -20,45 +20,63 @@ const Home = () => {
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block xl:inline">Create Amazing</span>{' '}
+                  <span className="block xl:inline">Create and share</span>{' '}
                   <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 xl:inline">
-                    Promotional Content
+                    local promos in minutes
                   </span>
                 </h1>
                 <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  Capture, edit, and share stunning photos and videos with our powerful camera tools. 
-                  Perfect for businesses, creators, and anyone who wants to make their content stand out.
+                  Capture, edit, and share stunning promotional content with our powerful camera tools. 
+                  Perfect for local businesses, restaurants, and service providers.
                 </p>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   {currentUser ? (
-                    <div className="rounded-md shadow sm:flex">
+                    <div className="space-y-3 sm:space-y-0 sm:flex sm:space-x-4">
+                      {/* Primary buttons */}
                       <Link
                         to="/submit"
-                        className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 md:py-4 md:text-lg md:px-10 transition-all duration-200 transform hover:scale-105"
+                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                       >
-                        📸 Start Creating
+                        📸 Submit Promo
                       </Link>
                       <Link
                         to="/dashboard"
-                        className="mt-3 w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 md:mt-0 md:ml-3 md:py-4 md:text-lg md:px-10 transition-all duration-200"
+                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                       >
-                        📊 My Dashboard
+                        📊 Dashboard
                       </Link>
                     </div>
                   ) : (
-                    <div className="rounded-md shadow sm:flex">
+                    <div className="space-y-3 sm:space-y-0 sm:flex sm:space-x-4">
+                      {/* Primary buttons */}
                       <Link
                         to="/signup"
-                        className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 md:py-4 md:text-lg md:px-10 transition-all duration-200 transform hover:scale-105"
+                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                       >
-                        🚀 Get Started Free
+                        🚀 Submit Promo
                       </Link>
                       <Link
-                        to="/login"
-                        className="mt-3 w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 md:mt-0 md:ml-3 md:py-4 md:text-lg md:px-10 transition-all duration-200"
+                        to="/dashboard"
+                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                       >
-                        Sign In
+                        📊 Dashboard
                       </Link>
+                      
+                      {/* Secondary buttons */}
+                      <div className="flex space-x-3 sm:ml-4">
+                        <Link
+                          to="/login"
+                          className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          Login
+                        </Link>
+                        <Link
+                          to="/signup"
+                          className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          Sign Up
+                        </Link>
+                      </div>
                     </div>
                   )}
                 </div>
