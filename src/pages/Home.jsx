@@ -8,12 +8,6 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        {/* Admin Link - Top Right */}
-        <div className="absolute top-4 right-4 z-20">
-          <a href="/admin/login" className="ml-3 px-3 py-2 rounded-lg border border-black/10 hover:bg-black/5">
-            Admin
-          </a>
-        </div>
         
         <div className="max-w-7xl mx-auto">
           <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
@@ -30,55 +24,21 @@ const Home = () => {
                   Perfect for local businesses, restaurants, and service providers.
                 </p>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                  {currentUser ? (
-                    <div className="space-y-3 sm:space-y-0 sm:flex sm:space-x-4">
-                      {/* Primary buttons */}
-                      <Link
-                        to="/submit"
-                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      >
-                        📸 Submit Promo
-                      </Link>
-                      <Link
-                        to="/dashboard"
-                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      >
-                        📊 Dashboard
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 sm:space-y-0 sm:flex sm:space-x-4">
-                      {/* Primary buttons */}
-                      <Link
-                        to="/signup"
-                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      >
-                        🚀 Submit Promo
-                      </Link>
-                      <Link
-                        to="/dashboard"
-                        className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      >
-                        📊 Dashboard
-                      </Link>
-                      
-                      {/* Secondary buttons */}
-                      <div className="flex space-x-3 sm:ml-4">
-                        <Link
-                          to="/login"
-                          className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          Login
-                        </Link>
-                        <Link
-                          to="/signup"
-                          className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          Sign Up
-                        </Link>
-                      </div>
-                    </div>
-                  )}
+                  <div className="space-y-3 sm:space-y-0 sm:flex sm:space-x-4">
+                    {/* Primary buttons */}
+                    <Link
+                      to="/submit"
+                      className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    >
+                      📸 Submit Promo
+                    </Link>
+                    <Link
+                      to="/dashboard"
+                      className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    >
+                      📊 Dashboard
+                    </Link>
+                  </div>
                 </div>
               </div>
             </main>
