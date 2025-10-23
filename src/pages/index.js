@@ -5,6 +5,7 @@ export { default as Signup } from './Signup';
 
 // Protected Pages
 export { default as Submit } from './Submit';
+export { default as SubmitTweet } from './SubmitTweet';
 export { default as Dashboard } from './Dashboard';
 
 // Admin Pages

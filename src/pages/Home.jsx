@@ -38,6 +38,12 @@ const Home = () => {
                     >
                       📊 Dashboard
                     </Link>
+                    <Link
+                      to="/submit-tweet"
+                      className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    >
+                      🐦 Submit Tweet
+                    </Link>
                   </div>
                 </div>
               </div>

@@ -16,7 +16,7 @@ export default function Dashboard() {
   const [error, setError] = useState('');
 
   if (!user || !ADMIN_EMAILS.includes(email)) {
-    if (typeof window !== "undefined") window.location.replace("/admin/login");
+    navigate("/admin/login");
     return null;
   }
 

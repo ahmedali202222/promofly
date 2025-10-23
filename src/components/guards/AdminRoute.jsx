@@ -1,9 +1,10 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -37,13 +38,13 @@ const AdminRoute = ({ children }) => {
             </p>
             <div className="flex gap-3 justify-center">
               <button
-                onClick={() => window.history.back()}
+                onClick={() => navigate(-1)}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
               >
                 Go Back
               </button>
               <button
-                onClick={() => window.location.href = '/dashboard'}
+                onClick={() => navigate('/dashboard')}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
               >
                 Go to Dashboard

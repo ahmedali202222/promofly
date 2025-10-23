@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "")
   .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -8,6 +9,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const signIn = async (e) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ export default function AdminLogin() {
       const { user } = await signInWithEmailAndPassword(auth, email, pass);
       const ok = ADMIN_EMAILS.includes((user?.email || "").toLowerCase());
       if (!ok) throw new Error("Not authorized for admin.");
-      window.location.assign("/admin");
+      navigate("/admin");
     } catch (err) {
       setError(err?.message || "Login failed");
     }

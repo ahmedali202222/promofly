@@ -6,6 +6,7 @@ import {
   Login, 
   Signup,
   Submit, 
+  SubmitTweet,
   Dashboard, 
   AdminLogin, 
   AdminPromoDetail 
@@ -29,6 +30,11 @@ function App() {
             <Route path="/submit" element={
               <ProtectedRoute>
                 <Submit />
+              </ProtectedRoute>
+            } />
+            <Route path="/submit-tweet" element={
+              <ProtectedRoute>
+                <SubmitTweet />
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={

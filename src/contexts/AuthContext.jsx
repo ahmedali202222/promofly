@@ -3,8 +3,7 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signOut, 
-  onAuthStateChanged,
-  getIdTokenResult
+  onAuthStateChanged
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -49,35 +48,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const checkAdminStatus = async (user) => {
-    try {
-      // For development: Check if email contains 'admin' or is a specific admin email
-      const isAdminEmail = user.email && (
-        user.email.toLowerCase().includes('admin') || 
-        user.email === 'admin@promofly.com' ||
-        user.email === 'admin@test.com' ||
-        user.email === 'ack48212@gmail.com'
-      );
-      
-      if (isAdminEmail) {
-        setIsAdmin(true);
-        return;
-      }
-      
-      // Check Firebase custom claims (for production)
-      const tokenResult = await getIdTokenResult(user);
-      setIsAdmin(!!tokenResult.claims.admin);
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      setIsAdmin(false);
-    }
-  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       if (user) {
-        await checkAdminStatus(user);
+        // Simple admin check without async operations
+        const isAdminEmail = user.email && (
+          user.email.toLowerCase().includes('admin') || 
+          user.email === 'admin@promofly.com' ||
+          user.email === 'admin@test.com' ||
+          user.email === 'ack48212@gmail.com'
+        );
+        setIsAdmin(isAdminEmail);
       } else {
         setIsAdmin(false);
       }
@@ -98,7 +81,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
