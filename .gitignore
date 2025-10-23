@@ -64,25 +64,17 @@ node_modules/
 
 # dotenv environment variables file
 .env
+.env.*.local
+.env.local
 
 # dataconnect generated files
 .dataconnect
-node_modules
-node_modules
-
-
 
 # node / vite
-node_modules/
 dist/
 .vite/
 *.log
 .DS_Store
-
-# env / credentials
-.env
-.env.*.local
-.env.local
 
 # firebase / emulator
 .firebase/
@@ -99,3 +91,7 @@ google-cloud-sdk/
 
 # misc
 coverage/
+
+# Generated files
+MainDependencies.txt
+gitignore
